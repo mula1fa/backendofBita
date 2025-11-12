@@ -1,19 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-// --- الخطوة 1: استيراد مكتبات Firebase ---
+// --- 1. استيراد مكتبات Firebase ---
 import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   onAuthStateChanged,
-  signOut,
-  setPersistence,
-  browserLocalPersistence
+  signOut 
 } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 
-// --- الخطوة 2: إعدادات Firebase الخاصة بك (التي أرسلتها) ---
+// --- 2. إعدادات Firebase الخاصة بك (من مشروعك) ---
 const firebaseConfig = {
   apiKey: "AIzaSyBDdz42hsoiE1ahl93phQ2W2qFyBEH951U",
   authDomain: "bita-c6209.firebaseapp.com",
@@ -24,18 +22,13 @@ const firebaseConfig = {
   measurementId: "G-R2X9WZ88CK"
 };
 
-// --- الخطوة 3: تهيئة Firebase ---
+// --- 3. تهيئة Firebase ---
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app); // تم تفعيله
+const analytics = getAnalytics(app); 
 const auth = getAuth(app);
 
-// --- تفعيل استمرارية الجلسة: يبقى المستخدم مسجلاً حتى بعد إعادة فتح الصفحة ---
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.error('تعذر ضبط استمرارية الجلسة:', err);
-});
 
-
-// --- أيقونات SVG مدمجة (من Icons.jsx) ---
+// --- أيقونات SVG مدمجة (للاختصار، سأضيف واحدة فقط كمثال) ---
 const CameraIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
     <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
@@ -43,7 +36,7 @@ const CameraIcon = () => (
   </svg>
 );
 const HomeIcon = ({ active }) => (
-<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={active ? "text-[#00C6AE]" : "text-gray-400"}>
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={active ? "text-[#00BF63]" : "text-gray-400"}>
     <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
     <polyline points="9 22 9 12 15 12 15 22" />
   </svg>
@@ -188,8 +181,7 @@ function AuthPage({ onAuthSuccess }) {
       } else {
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
       }
-      // لا ننتقل للصفحة التالية هنا، onAuthStateChanged سيتولى الأمر
-      // onAuthSuccess(userCredential.user); // onAuthStateChanged هو الأفضل
+      // onAuthStateChanged سيتولى الباقي
     } catch (err) {
       if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setError('كلمة المرور أو البريد الإلكتروني غير صحيح.');
@@ -209,7 +201,6 @@ function AuthPage({ onAuthSuccess }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#000000] flex-grow animate-fade-in">
       <div className="w-full max-w-sm text-center">
-        {/* شعار التطبيق */}
         <img src="/Group 1.svg" alt="شعار B1TE" className="w-32 mx-auto mb-6" />
         <h1 className="text-3xl font-bold text-white mb-2">{isLogin ? 'تسجيل الدخول' : 'إنشاء حساب'}</h1>
         <p className="text-gray-400 text-lg mb-6">أدخل بياناتك للمتابعة.</p>
@@ -222,7 +213,7 @@ function AuthPage({ onAuthSuccess }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-gray-900 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00C6AE]"
+              className="w-full bg-gray-900 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00C6AE]"
               placeholder="example@email.com"
               required
             />
@@ -234,7 +225,7 @@ function AuthPage({ onAuthSuccess }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-gray-900 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00C6AE]"
+              className="w-full bg-gray-900 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00C6AE]"
               placeholder="******"
               required
             />
@@ -261,7 +252,7 @@ function AuthPage({ onAuthSuccess }) {
   );
 }
 
-// --- 2. شاشة اختيار العمر (لا تحتاج تعديل) ---
+// --- 2. شاشة اختيار العمر ---
 function AgeSelectionPage({ onAgeSelected, initialAge = 25 }) {
   const [age, setAge] = useState(initialAge);
 
@@ -300,13 +291,12 @@ function AgeSelectionPage({ onAgeSelected, initialAge = 25 }) {
   );
 }
 
-// --- 3. شاشة اختيار الوزن (لا تحتاج تعديل) ---
+// --- 3. شاشة اختيار الوزن ---
 function WeightSelectionPage({ onWeightSelected, initialWeight = 70, initialUnit = 'kg' }) {
   const [weight, setWeight] = useState(initialWeight);
   const [unit, setUnit] = useState(initialUnit);
 
   const handleNext = () => {
-    // onWeightSelected هو الذي سيرسل البيانات للخادم
     onWeightSelected(weight, unit);
   };
 
@@ -343,7 +333,7 @@ function WeightSelectionPage({ onWeightSelected, initialWeight = 70, initialUnit
             <button
               onClick={() => handleUnitChange('kg')}
               className={`py-2 px-5 rounded-lg text-lg font-semibold transition-colors ${
-              unit === 'kg' ? 'bg-[#00C6AE] text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                unit === 'kg' ? 'bg-[#00C6AE] text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
               KG
@@ -351,7 +341,7 @@ function WeightSelectionPage({ onWeightSelected, initialWeight = 70, initialUnit
             <button
               onClick={() => handleUnitChange('lb')}
               className={`py-2 px-5 rounded-lg text-lg font-semibold transition-colors ${
-              unit === 'lb' ? 'bg-[#00C6AE] text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                unit === 'lb' ? 'bg-[#00C6AE] text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
               LB
@@ -380,8 +370,8 @@ function B1TEAppPage({ user, idToken, onLogout, onNavigate }) {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
-  // الرابط الخاص بالخادم (العقل المدبر) الذي يعمل على جهازك
-  const BACKEND_URL = '/api';
+  // --- !! هذا هو الرابط الذي يتصل بالخادم !! ---
+  const BACKEND_URL = 'https://backendofbita.onrender.com';
 
   const handleBoxClick = () => {
     setImagePreview(null);
@@ -390,7 +380,7 @@ function B1TEAppPage({ user, idToken, onLogout, onNavigate }) {
     fileInputRef.current.click();
   };
 
-  // --- معدل بالكامل: الاتصال بالـ Backend بدلاً من Gemini ---
+  // الاتصال بالـ Backend بدلاً من Gemini
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -428,12 +418,16 @@ function B1TEAppPage({ user, idToken, onLogout, onNavigate }) {
         throw new Error(responseData.error || `خطأ من الخادم: ${response.statusText}`);
       }
       
-      // الخادم يرسل النتيجة جاهزة: { foodName, calories, protein, ... }
       setAnalysis(responseData);
 
     } catch (err) {
       console.error("Error analyzing image:", err);
-      setError(`فشل تحليل الصورة: ${err.message}. يرجى المحاولة مرة أخرى.`);
+      // التحقق من "صحوة" الخادم
+      if (err.message.includes('Failed to fetch') || err.message.includes('timeout')) {
+          setError(`فشل الاتصال بالخادم. الخادم "النائم" قد يستغرق 50 ثانية للاستيقاظ. يرجى المحاولة مرة أخرى.`);
+      } else {
+          setError(`فشل تحليل الصورة: ${err.message}. يرجى المحاولة مرة أخرى.`);
+      }
     } finally {
       setIsLoading(false);
       if(fileInputRef.current) fileInputRef.current.value = null;
@@ -443,13 +437,11 @@ function B1TEAppPage({ user, idToken, onLogout, onNavigate }) {
   return (
     <div className="flex flex-col min-h-screen animate-fade-in-up">
       {/* الهيدر العلوي */}
-      <header className="px-4 py-4 bg-black shadow-sm border-b border-white/10">
-        <div className="w-full max-w-sm mx-auto flex justify-between items-center">
-          <img src="/Group 1.svg" alt="شعار B1TE" className="h-8 w-auto" />
-          <button onClick={onLogout} className="text-sm text-gray-400 hover:text-[#00C6AE]">
-            خروج
-          </button>
-        </div>
+      <header className="px-4 py-4 bg-black shadow-sm border-b border-white/10 flex justify-between items-center">
+        <img src="/Group 1.svg" alt="شعار B1TE" className="h-8 w-auto" />
+        <button onClick={onLogout} className="text-sm text-gray-400 hover:text-[#00C6AE]">
+          خروج
+        </button>
       </header>
 
       {/* المحتوى الرئيسي */}
@@ -480,7 +472,7 @@ function B1TEAppPage({ user, idToken, onLogout, onNavigate }) {
 
           {isLoading && (
              <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-black bg-opacity-70">
-              <div className="w-12 h-12 border-4 border-[#00C6AE] border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-[#00BF63] border-t-transparent rounded-full animate-spin"></div>
               <p className="mt-4 text-white font-medium text-lg">جاري تحليل وجبتك...</p>
             </div>
           )}
@@ -488,25 +480,22 @@ function B1TEAppPage({ user, idToken, onLogout, onNavigate }) {
 
         {/* قسم النتائج */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-[#00C6AE]">التحليل الغذائي</h2>
+          <h2 className="text-xl font-bold text-[#00BF63]">التحليل الغذائي</h2>
           
           {error && (
             <Alert type="error" title="خطأ" message={error} />
           )}
           
-          {/* --- معدل: ليتناسب مع رد الخادم الجديد --- */}
           {analysis && (
             <div className="space-y-4">
-              
               <Alert type="success" title="تم التحليل بنجاح!" message={`وجبتك: ${analysis.foodName}`} />
-              
               <div className="grid grid-cols-2 gap-4">
                 <InfoCard 
                   icon={<ZapIcon />} 
                   title="سعرات" 
                   value={Math.round(analysis.calories)} 
                   unit="cal"
-                  colorClass="border-[#00C6AE]"
+                  colorClass="border-[#00BF63]"
                 />
                 <InfoCard 
                   icon={<BeefIcon />} 
@@ -557,8 +546,8 @@ function B1TEAppPage({ user, idToken, onLogout, onNavigate }) {
       </main>
 
       {/* شريط التنقل السفلي */}
-      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-black/95 backdrop-blur shadow-inner border-t border-white/10 flex justify-around items-center p-3 z-50">
-        <button className="flex flex-col items-center text-[#00C6AE]">
+      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-black/95 backdrop-blur shadow-inner border-t border-white/10 flex justify-around items-center p-3 z-50">
+        <button className="flex flex-col items-center text-[#00C6AE]" onClick={() => onNavigate('app')}>
           <HomeIcon active={true} />
           <span className="text-xs font-medium">الرئيسية</span>
         </button>
@@ -581,7 +570,7 @@ function MealHistoryPage({ idToken, onLogout, onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const BACKEND_URL = 'http://127.0.0.1:5001';
+  const BACKEND_URL = 'https://backendofbita.onrender.com';
 
   useEffect(() => {
     const fetchMeals = async () => {
@@ -604,43 +593,22 @@ function MealHistoryPage({ idToken, onLogout, onNavigate }) {
   }, [idToken]);
 
   const parseDate = (ts) => {
-    try {
-      const d = new Date(ts);
-      return isNaN(d.getTime()) ? null : d;
-    } catch {
-      return null;
-    }
+    try { const d = new Date(ts); return isNaN(d.getTime()) ? null : d; } catch { return null; }
   };
-
-  const formatDateTime = (ts) => {
-    const d = parseDate(ts);
-    return d ? d.toLocaleString() : '—';
-  };
-
-  const dayKey = (ts) => {
-    const d = parseDate(ts);
-    if (!d) return 'غير معروف';
-    // مفتاح اليوم حسب التوقيت المحلي
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
+  const formatDateTime = (ts) => { const d = parseDate(ts); return d ? d.toLocaleString() : '—'; };
+  const dayKey = (ts) => { const d = parseDate(ts); if (!d) return 'غير معروف'; const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; };
 
   const grouped = (() => {
     const acc = {};
     for (const m of meals) {
       const key = dayKey(m.timestamp);
-      if (!acc[key]) {
-        acc[key] = { items: [], total: { calories: 0, protein: 0, carbs: 0, fats: 0 } };
-      }
+      if (!acc[key]) acc[key] = { items: [], total: { calories: 0, protein: 0, carbs: 0, fats: 0 } };
       acc[key].items.push(m);
       acc[key].total.calories += Number(m.calories || 0);
       acc[key].total.protein += Number(m.protein || 0);
       acc[key].total.carbs += Number(m.carbs || 0);
       acc[key].total.fats += Number(m.fats || 0);
     }
-    // ترتيب الأيام تنازليًا
     const keys = Object.keys(acc).sort((a, b) => b.localeCompare(a));
     return keys.map(k => ({ day: k, ...acc[k] }));
   })();
@@ -665,11 +633,9 @@ function MealHistoryPage({ idToken, onLogout, onNavigate }) {
 
   return (
     <div className="flex flex-col min-h-screen animate-fade-in-up">
-      <header className="px-4 py-4 bg-black shadow-sm border-b border-white/10">
-        <div className="w-full max-w-sm mx-auto flex justify-between items-center">
-          <img src="/Group 1.svg" alt="شعار B1TE" className="h-8 w-auto" />
-          <button onClick={onLogout} className="text-sm text-gray-400 hover:text-[#00C6AE]">خروج</button>
-        </div>
+      <header className="px-4 py-4 bg-black shadow-sm border-b border-white/10 flex justify-between items-center">
+        <img src="/Group 1.svg" alt="شعار B1TE" className="h-8 w-auto" />
+        <button onClick={onLogout} className="text-sm text-gray-400 hover:text-[#00C6AE]">خروج</button>
       </header>
 
       <main className="flex-grow p-4 md:p-6 space-y-4 overflow-y-auto bg-black pb-24">
@@ -682,9 +648,7 @@ function MealHistoryPage({ idToken, onLogout, onNavigate }) {
           </div>
         )}
 
-        {error && (
-          <Alert type="error" title="خطأ" message={error} />)
-        }
+        {error && (<Alert type="error" title="خطأ" message={error} />)}
 
         {!loading && !error && meals.length === 0 && (
           <div className="text-center p-6 bg-black rounded-xl shadow-md border border-white/10 text-gray-400">
@@ -705,7 +669,6 @@ function MealHistoryPage({ idToken, onLogout, onNavigate }) {
                     <span>دهون: {Math.round(group.total.fats)}g</span>
                   </div>
                 </div>
-
                 {group.items.map((m) => (
                   <div key={m.id} className="bg-black border border-white/10 rounded-xl p-4 flex justify-between items-start">
                     <div>
@@ -717,11 +680,7 @@ function MealHistoryPage({ idToken, onLogout, onNavigate }) {
                       <div className="text-xs text-gray-400 mt-1">
                         بروتين: {Math.round(m.protein || 0)}g • كربوهيدرات: {Math.round(m.carbs || 0)}g • دهون: {Math.round(m.fats || 0)}g
                       </div>
-                      <button
-                        onClick={() => deleteMeal(m.id)}
-                        disabled={deletingId === m.id}
-                        className="mt-2 px-3 py-1 text-xs rounded-lg border border-white/20 text-red-400 hover:bg-red-500/10 disabled:opacity-50"
-                      >
+                      <button onClick={() => deleteMeal(m.id)} disabled={deletingId === m.id} className="mt-2 px-3 py-1 text-xs rounded-lg border border-white/20 text-red-400 hover:bg-red-500/10 disabled:opacity-50">
                         {deletingId === m.id ? 'جارِ الحذف…' : 'حذف'}
                       </button>
                     </div>
@@ -733,7 +692,7 @@ function MealHistoryPage({ idToken, onLogout, onNavigate }) {
         )}
       </main>
 
-      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-black/95 backdrop-blur shadow-inner border-t border-white/10 flex justify-around items-center p-3 z-50">
+      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-black/95 backdrop-blur shadow-inner border-t border-white/10 flex justify-around items-center p-3 z-50">
         <button className="flex flex-col items-center text-gray-400" onClick={() => onNavigate('app')}>
           <HomeIcon />
           <span className="text-xs font-medium">الرئيسية</span>
@@ -760,7 +719,7 @@ function ProfilePage({ idToken, onLogout, onNavigate }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
-  const BACKEND_URL = 'http://127.0.0.1:5001';
+  const BACKEND_URL = 'https://backendofbita.onrender.com';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -791,15 +750,16 @@ function ProfilePage({ idToken, onLogout, onNavigate }) {
       setError(null);
       const res = await fetch(`${BACKEND_URL}/update-profile`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
         body: JSON.stringify({ appId: 'B1TE', age: age ? Number(age) : null, weight: weight ? Number(weight) : null, weightUnit })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'فشل حفظ الملف الشخصي');
       setMessage('تم حفظ التغييرات بنجاح');
+      // حفظ محلي لتجاوز الأسئلة لاحقًا
+      try {
+        localStorage.setItem('b1te_profile', JSON.stringify({ age: age ? Number(age) : null, weight: weight ? Number(weight) : null, weightUnit }));
+      } catch (_) {}
     } catch (err) {
       setError(err.message);
     } finally {
@@ -809,16 +769,13 @@ function ProfilePage({ idToken, onLogout, onNavigate }) {
 
   return (
     <div className="flex flex-col min-h-screen animate-fade-in-up">
-      <header className="px-4 py-4 bg-black shadow-sm border-b border-white/10">
-        <div className="w-full max-w-sm mx-auto flex justify-between items-center">
-          <img src="/Group 1.svg" alt="شعار B1TE" className="h-8 w-auto" />
-          <button onClick={onLogout} className="text-sm text-gray-400 hover:text-[#00C6AE]">خروج</button>
-        </div>
+      <header className="px-4 py-4 bg-black shadow-sm border-b border-white/10 flex justify-between items-center">
+        <img src="/Group 1.svg" alt="شعار B1TE" className="h-8 w-auto" />
+        <button onClick={onLogout} className="text-sm text-gray-400 hover:text-[#00C6AE]">خروج</button>
       </header>
 
-      <main className="flex-grow p-4 md:p-6 space-y-4 overflow-y-auto bg-black">
+      <main className="flex-grow p-4 md:p-6 space-y-4 overflow-y-auto bg-black pb-24">
         <h2 className="text-xl font-bold text-[#00C6AE]">ملفي الشخصي</h2>
-
         {loading ? (
           <div className="flex items-center gap-3 text-gray-300">
             <Loader2 className="w-5 h-5 animate-spin text-[#00C6AE]" />
@@ -840,19 +797,17 @@ function ProfilePage({ idToken, onLogout, onNavigate }) {
                 </select>
               </div>
             </div>
-
             <button onClick={saveProfile} disabled={saving} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#7EE8A8] to-[#00C6AE] text-white font-bold py-3 rounded-lg hover:opacity-90 transition-all text-lg disabled:opacity-50">
               {saving ? <Loader2 className="animate-spin w-6 h-6" /> : null}
               <span>حفظ التغييرات</span>
             </button>
-
             {message && <Alert type="success" title="نجاح" message={message} />}
             {error && <Alert type="error" title="خطأ" message={error} />}
           </div>
         )}
       </main>
 
-      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-black/95 backdrop-blur shadow-inner border-t border-white/10 flex justify-around items-center p-3 z-50">
+      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-black/95 backdrop-blur shadow-inner border-t border-white/10 flex justify-around items-center p-3 z-50">
         <button className="flex flex-col items-center text-gray-400" onClick={() => onNavigate('app')}>
           <HomeIcon />
           <span className="text-xs font-medium">الرئيسية</span>
@@ -869,56 +824,95 @@ function ProfilePage({ idToken, onLogout, onNavigate }) {
     </div>
   );
 }
-
-// --- 5. المكون الرئيسي (مدير الصفحات) (معدل بالكامل) ---
+// --- 5. المكون الرئيسي (مدير الصفحات) ---
 export default function App() {
   const [page, setPage] = useState('loading'); // 'loading', 'auth', 'ageSelection', 'weightSelection', 'app', 'history', 'profile'
   const [user, setUser] = useState(null);
   const [idToken, setIdToken] = useState(null);
   const [userData, setUserData] = useState({ age: null, weight: null, weightUnit: null });
 
-  // الرابط الخاص بالخادم
-  const BACKEND_URL = 'http://127.0.0.1:5001';
+  // --- !! هذا هو الرابط الذي يتصل بالخادم !! ---
+  const BACKEND_URL = 'https://backendofbita.onrender.com';
+
+  // حفظ محلي للملف الشخصي لتجاوز الأسئلة في حال توفر البيانات
+  const saveLocalProfile = (profile) => {
+    try {
+      localStorage.setItem('b1te_profile', JSON.stringify(profile || {}));
+    } catch (_) {}
+  };
+  const getLocalProfile = () => {
+    try {
+      const s = localStorage.getItem('b1te_profile');
+      return s ? JSON.parse(s) : {};
+    } catch (_) {
+      return {};
+    }
+  };
   
   // تحميل الخطوط والأنيميشن و Tailwind
   useEffect(() => {
-    // ... (كود تحميل الخطوط والأنيميشن و Tailwind)
-    // (يمكنك إضافة الكود من ملفك الأصلي هنا للتأكد من تحميلها)
+    // ... (كود تحميل الخطوط والأنيميشن)
+    const appFont = document.getElementById('app-font');
+    if (!appFont) { /* ... */ }
+    const animations = document.getElementById('app-animations');
+    if (!animations) { /* ... */ }
+    const tailwindScript = document.getElementById('tailwind-cdn');
+    if (!tailwindScript) { /* ... */ }
   }, []);
 
-  // --- جديد: مراقبة حالة تسجيل الدخول ---
+  // --- مراقبة حالة تسجيل الدخول ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        const token = await currentUser.getIdToken(true);
+        const token = await currentUser.getIdToken();
         setIdToken(token);
-
-        // جلب الملف الشخصي من الخادم لمعرفة إن كان العمر/الوزن محفوظين
+        
+        // التحقق إذا كان المستخدم قد أكمل الإعداد (العمر والوزن)
         try {
-          const res = await fetch(`${BACKEND_URL}/get-profile?appId=B1TE`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          const profile = await res.json();
-          const age = profile?.age ?? null;
-          const weight = profile?.weight ?? null;
-          const weightUnit = profile?.weightUnit ?? null;
-          setUserData({ age, weight, weightUnit });
+            const response = await fetch(`${BACKEND_URL}/get-profile?appId=B1TE`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const profileData = await response.json();
+            
+            // خزّن البيانات المسترجعة
+            setUserData(profileData || {});
 
-          if (age) {
-            // لدى المستخدم عمر محفوظ؛ إن كان لديه وزن أيضاً نأخذه، وإلا ندخل للتطبيق ونسمح بإكمال لاحقاً
-            setPage('app');
-          } else {
-            // لا يوجد عمر محفوظ؛ اطلبه
-            setPage('ageSelection');
-          }
+            const hasAge = profileData && profileData.age != null;
+            const hasWeight = profileData && profileData.weight != null;
+
+            if (hasAge && hasWeight) {
+                // اكتمل الإعداد سابقًا — لا تسأل مرة ثانية
+                setPage('app');
+            } else {
+                // نسخة احتياطية من التخزين المحلي إن كانت البيانات موجودة
+                const local = getLocalProfile();
+                const lAge = local && local.age != null;
+                const lWeight = local && local.weight != null;
+                if (lAge && lWeight) {
+                  setUserData(local);
+                  setPage('app');
+                } else if (!hasAge) {
+                  // ناقص العمر — ابدأ بالخطوة الأولى
+                  setPage('ageSelection');
+                } else {
+                  // العمر موجود لكن الوزن ناقص — أكمل خطوة الوزن فقط
+                  setPage('weightSelection');
+                }
+            }
         } catch (err) {
-          console.error('فشل جلب الملف الشخصي:', err);
-          // في حال الفشل، ابدأ من اختيار العمر كخيار آمن
-          setPage('ageSelection');
+            console.error("فشل جلب الملف الشخصي:", err);
+            // في حال فشل الجلب، إن كان المستخدم معروفًا، لا نكرر الأسئلة إن كانت محفوظة محليًا
+            // وإلا فسنعود للإعداد كإجراء احتياطي
+            const local = getLocalProfile();
+            const lAge = local && local.age != null;
+            const lWeight = local && local.weight != null;
+            if (lAge && lWeight) {
+              setUserData(local);
+              setPage('app');
+            } else {
+              setPage('ageSelection');
+            }
         }
       } else {
         // لا يوجد مستخدم
@@ -929,68 +923,49 @@ export default function App() {
     });
 
     return () => unsubscribe(); // تنظيف عند إغلاق المكون
-  }, []); // يكفي الاشتراك مرة واحدة عند تحميل التطبيق
+  }, []);
 
-  // (1) المستخدم سجل الدخول بنجاح
-  const handleAuthSuccess = (userInfo) => {
-    // onAuthStateChanged سيتولى الأمر، لكننا ننتقل يدوياً
-    // لضمان تدفق المستخدم الجديد
-    setUser(userInfo); 
-    setPage('ageSelection');
+  // (1) المستخدم اختار العمر
+  const handleAgeSelected = (age) => {
+    setUserData(prev => ({ ...prev, age }));
+    setPage('weightSelection');
   };
 
-  // (2) المستخدم اختار العمر
-  const handleAgeSelected = async (age) => {
-    // خزّن العمر مباشرةً في قاعدة البيانات لضمان توفره دائماً
-    try {
-      const token = await auth.currentUser.getIdToken();
-      await fetch(`${BACKEND_URL}/update-profile`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ appId: 'B1TE', age })
-      });
-      setUserData(prev => ({ ...prev, age }));
-      setPage('weightSelection');
-    } catch (err) {
-      console.error('فشل حفظ العمر:', err);
-      // يمكن عرض تنبيه للمستخدم لاحقاً، لكن لا نوقف التدفق
-      setUserData(prev => ({ ...prev, age }));
-      setPage('weightSelection');
-    }
-  };
-
-  // (3) المستخدم اختار الوزن (معدل لإرسال البيانات للخادم)
+  // (2) المستخدم اختار الوزن (وإرسال البيانات للخادم)
   const handleWeightSelected = async (weight, unit) => {
+    const currentAge = userData.age; // العمر من الخطوة السابقة
     setUserData(prev => ({ ...prev, weight, weightUnit: unit }));
-
-    // حدّث الوزن فقط (العمر محفوظ مسبقاً)
+    
     try {
       const token = await auth.currentUser.getIdToken();
+      const payload = {
+        age: currentAge, 
+        weight: weight,
+        weightUnit: unit,
+        appId: 'B1TE'
+      };
+
       await fetch(`${BACKEND_URL}/update-profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ appId: 'B1TE', weight, weightUnit: unit })
+        body: JSON.stringify(payload)
       });
-      setPage('app');
+      // حفظ محلي لتجاوز الأسئلة لاحقًا
+      saveLocalProfile({ age: currentAge, weight, weightUnit: unit });
+      
+      setPage('app'); // بعد الحفظ بنجاح، انتقل للتطبيق
     } catch (err) {
-      console.error('فشل حفظ الوزن:', err);
-      // يمكن عرض رسالة خطأ للمستخدم
+      console.error("فشل تحديث الملف الشخصي:", err);
+      // يمكنك عرض رسالة خطأ هنا للمستخدم
     }
   };
 
-  // (4) المستخدم سجل الخروج
+  // (3) المستخدم سجل الخروج
   const handleLogout = () => {
     signOut(auth);
-  };
-
-  const handleNavigate = (target) => {
-    setPage(target);
   };
   
   // اختيار الصفحة للعرض
@@ -999,24 +974,23 @@ export default function App() {
       case 'loading':
         return (
           <div className="flex items-center justify-center min-h-screen">
-            <Loader2 className="w-12 h-12 text-[#00C6AE] animate-spin" />
+            <Loader2 className="w-12 h-12 text-[#00BF63] animate-spin" />
           </div>
         );
       case 'auth':
-        // onAuthSuccess أصبح غير ضروري لأن onAuthStateChanged يقوم بالعمل
-        return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+        return <AuthPage onAuthSuccess={() => {}} />; // onAuthStateChanged يعالج النجاح
       case 'ageSelection':
         return <AgeSelectionPage onAgeSelected={handleAgeSelected} />;
       case 'weightSelection':
         return <WeightSelectionPage onWeightSelected={handleWeightSelected} />;
       case 'app':
-        return <B1TEAppPage user={user} idToken={idToken} onLogout={handleLogout} onNavigate={handleNavigate} />;
+        return <B1TEAppPage user={user} idToken={idToken} onLogout={handleLogout} onNavigate={setPage} />;
       case 'history':
-        return <MealHistoryPage idToken={idToken} onLogout={handleLogout} onNavigate={handleNavigate} />;
+        return <MealHistoryPage idToken={idToken} onLogout={handleLogout} onNavigate={setPage} />;
       case 'profile':
-        return <ProfilePage idToken={idToken} onLogout={handleLogout} onNavigate={handleNavigate} />;
+        return <ProfilePage idToken={idToken} onLogout={handleLogout} onNavigate={setPage} />;
       default:
-        return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+        return <AuthPage onAuthSuccess={() => {}} />;
     }
   };
 
