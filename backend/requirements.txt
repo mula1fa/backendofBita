@@ -3,4 +3,4 @@ flask_cors
 python-dotenv
 firebase-admin
 requests
-gunicorn  <-- (هذا مهم جداً لـ Render)
+gunicorn
