@@ -2,14 +2,15 @@ import os
 import json
 import requests
 import firebase_admin
-import base64 # <-- 1. لاستيراد المفتاح السري
+import base64 # <-- لاستيراد المفتاح السري
 from firebase_admin import credentials, firestore, auth
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from dotenv import load_dotenv
+from dotenv import load_dotenv # لتحميل المتغيرات محلياً (للتجربة)
 from datetime import datetime
 
-# --- 1. تحميل متغيرات البيئة من Vercel ---
+# --- 1. تحميل متغيرات البيئة ---
+# (Render سيقوم بتوفير هذه المتغيرات تلقائياً عند النشر)
 load_dotenv() 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 EDAMAM_APP_ID = os.getenv('EDAMAM_APP_ID')
@@ -17,15 +18,16 @@ EDAMAM_APP_KEY = os.getenv('EDAMAM_APP_KEY')
 
 # --- 2. تهيئة Flask و Firebase (من متغيرات البيئة) ---
 app = Flask(__name__)
-CORS(app) # السماح بالاتصال من أي مكان
+# السماح بالاتصال من أي مكان (مهم لـ Vercel و Render)
+CORS(app) 
 
 try:
-    # <-- 2. قراءة المفتاح المرمز من متغيرات البيئة
+    # --- قراءة مفتاح Firebase المرمز ---
     creds_base64 = os.getenv('GOOGLE_CREDS_BASE64')
     if not creds_base64:
         raise ValueError("متغير GOOGLE_CREDS_BASE64 غير موجود.")
         
-    # <-- 3. فك ترميز المفتاح وقراءته كـ JSON
+    # فك ترميز المفتاح وقراءته كـ JSON
     creds_json_str = base64.b64decode(creds_base64).decode('utf-8')
     creds_dict = json.loads(creds_json_str)
     
@@ -35,6 +37,7 @@ try:
     print("Firebase Admin SDK مُهيأ بنجاح (من متغير البيئة).")
 
 except ValueError as e:
+    # هذا يحدث إذا تم التهيئة من قبل
     if 'The default Firebase app already exists' in str(e):
         print("Firebase مُهيأ مسبقاً.")
         db = firestore.client()
@@ -47,23 +50,25 @@ except Exception as e:
 
 # --- 3. دالة مساعدة للتحقق من هوية المستخدم ---
 def _verify_token(request):
+    """يتحقق من التوكن المرسل في الهيدر ويرجع user_id"""
     try:
         id_token = request.headers.get('Authorization').split('Bearer ')[1]
         decoded_token = auth.verify_id_token(id_token)
         return decoded_token['uid']
-    except Exception as e:
-        print(f"خطأ في التحقق من التوكن: {e}")
+    except Exception:
+        # إذا كان التوكن غير صالح أو منتهي الصلاحية
         return None
 
 # --- 4. نقاط الاتصال (Endpoints) ---
-# (هام: كل المسارات تبدأ بـ /api/ الآن)
+# (ملاحظة: تمت إزالة /api/ من جميع المسارات)
 
-@app.route('/api/') # <-- تعديل المسار
+@app.route('/')
 def home():
-    return "B1TE Backend Server (v2 - Hybrid) is running on Vercel!"
+    return "B1TE Backend Server (v2 - Hybrid) is running on Render!"
 
-@app.route('/api/update-profile', methods=['POST']) # <-- تعديل المسار
+@app.route('/update-profile', methods=['POST'])
 def update_profile():
+    """يحفظ بيانات المستخدم (العمر، الوزن)"""
     user_id = _verify_token(request)
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
     if not db: return jsonify({"error": "Database not initialized"}), 500
@@ -76,8 +81,9 @@ def update_profile():
         print(f"خطأ في /update-profile: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/get-profile', methods=['GET']) # <-- تعديل المسار
+@app.route('/get-profile', methods=['GET'])
 def get_profile():
+    """يجلب بيانات الملف الشخصي للمستخدم (العمر، الوزن، وغيرها)"""
     user_id = _verify_token(request)
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
     if not db: return jsonify({"error": "Database not initialized"}), 500
@@ -90,13 +96,15 @@ def get_profile():
         if doc.exists:
             return jsonify(doc.to_dict()), 200
         else:
+            # إرجاع كائن فارغ إذا لم يكن الملف الشخصي موجوداً
             return jsonify({}), 200
     except Exception as e:
         print(f"خطأ في /get-profile: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/analyze-image', methods=['POST']) # <-- تعديل المسار
+@app.route('/analyze-image', methods=['POST'])
 def analyze_image_hybrid():
+    """الخطة الهجينة: Gemini + Edamam"""
     user_id = _verify_token(request)
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
     if not db: return jsonify({"error": "Database not initialized"}), 500
@@ -110,6 +118,7 @@ def analyze_image_hybrid():
         if not all([GEMINI_API_KEY, EDAMAM_APP_ID, EDAMAM_APP_KEY]):
             return jsonify({"error": "مفاتيح API غير مكتملة في الخادم"}), 500
 
+        # --- الخطوة 1: Gemini (العيون) ---
         print("الاتصال بـ Gemini للتعرف على المكونات...")
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={GEMINI_API_KEY}"
         
@@ -119,8 +128,10 @@ def analyze_image_hybrid():
         Your response must be a JSON object with a single key "ingredients".
         This key must contain an array of strings.
         Each string must be *only* the quantity and the food name.
-        **DO NOT** add any extra descriptive text in parentheses.
+        **DO NOT** add any extra descriptive text in parentheses (e.g., DO NOT write "(2 pieces)" or "(sautéed)").
+        
         Good Example: {"ingredients": ["180g glazed chicken breast", "1.5 cups cooked white rice", "50g green beans"]}
+        Bad Example: {"ingredients": ["180g glazed chicken breast (2 pieces)", "1.5 cups cooked white rice", "50g sautéed green beans"]}
         """
         gemini_payload = {
             "contents": [{"parts": [{"text": prompt}, {"inlineData": {"mimeType": mime_type, "data": image_base64}}]}],
@@ -136,6 +147,7 @@ def analyze_image_hybrid():
             return jsonify({"error": "لم يستطع Gemini التعرف على الطعام"}), 404
         print(f"Gemini وجد المكونات (نظيفة): {ingredients_list}")
 
+        # --- الخطوة 2: Edamam (العقل) ---
         print("الاتصال بـ Edamam لحساب التغذية...")
         edamam_url = f"https://api.edamam.com/api/nutrition-details?app_id={EDAMAM_APP_ID}&app_key={EDAMAM_APP_KEY}"
         edamam_payload = { "ingr": ingredients_list }
@@ -144,11 +156,8 @@ def analyze_image_hybrid():
         response_edamam.raise_for_status()
         edamam_data = response_edamam.json()
         
-        total_calories = 0
-        total_protein = 0
-        total_fats = 0
-        total_carbs = 0
-        
+        # --- حساب الإجمالي يدوياً ---
+        total_calories, total_protein, total_fats, total_carbs = 0, 0, 0, 0
         if "ingredients" in edamam_data:
             for item in edamam_data.get("ingredients", []):
                 if "parsed" in item:
@@ -159,23 +168,22 @@ def analyze_image_hybrid():
                             total_protein += nutrients.get("PROCNT", {}).get("quantity", 0)
                             total_fats += nutrients.get("FAT", {}).get("quantity", 0)
                             total_carbs += nutrients.get("CHOCDF", {}).get("quantity", 0)
-
-        print(f"الحسابات اليدوية: Cals={total_calories}, Prot={total_protein}, Fat={total_fats}, Carb={total_carbs}")
         
         final_analysis = {
             "foodName": ", ".join(ingredients_list), 
-            "calories": total_calories,
-            "protein": total_protein,
-            "fats": total_fats,
-            "carbs": total_carbs,
-            "components": ingredients_list, 
-            "timestamp": firestore.SERVER_TIMESTAMP 
+            "calories": total_calories, "protein": total_protein, "fats": total_fats, "carbs": total_carbs,
+            "components": ingredients_list, "timestamp": firestore.SERVER_TIMESTAMP 
         }
 
+        # --- الخطوة 3: حفظ النتيجة في Firestore ---
         print("حفظ النتيجة في Firestore...")
         meals_ref = db.collection(f'artifacts/{app_id}/users/{user_id}/meals')
         meals_ref.add(final_analysis)
+
+        # تحويل timestamp لـ JSON قبل إرساله لـ React
         final_analysis['timestamp'] = datetime.utcnow().isoformat() + 'Z' 
+
+        # --- الخطوة 4: إعادة النتيجة للواجهة الأمامية ---
         print("إرسال النتيجة إلى React.")
         return jsonify(final_analysis), 200
 
@@ -190,8 +198,9 @@ def analyze_image_hybrid():
         print(f"خطأ فادح في /analyze-image: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/get-meal-history', methods=['GET']) # <-- تعديل المسار
+@app.route('/get-meal-history', methods=['GET'])
 def get_meal_history():
+    """يجلب سجل الوجبات للمستخدم، مرتباً من الأحدث للأقدم"""
     user_id = _verify_token(request)
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
     if not db: return jsonify({"error": "Database not initialized"}), 500
@@ -212,8 +221,9 @@ def get_meal_history():
         print(f"خطأ في /get-meal-history: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/delete-meal', methods=['DELETE']) # <-- تعديل المسار
+@app.route('/delete-meal', methods=['DELETE'])
 def delete_meal():
+    """يحذف وجبة واحدة من سجل المستخدم بحسب المعرّف"""
     user_id = _verify_token(request)
     if not user_id: return jsonify({"error": "Unauthorized"}), 401
     if not db: return jsonify({"error": "Database not initialized"}), 500
@@ -232,4 +242,4 @@ def delete_meal():
         return jsonify({"error": str(e)}), 500
 
 # --- 5. حذف `app.run()` ---
-# (if __name__ == "__main__":... تم حذفه بالكامل)
+# (if __name__ == "__main__":... تم حذفه بالكامل، Render سيتولى الأمر)

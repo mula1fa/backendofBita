@@ -1,5 +1,6 @@
-Flask
-Flask-CORS
+flask
+flask_cors
+python-dotenv
 firebase-admin
 requests
-python-dotenv
+gunicorn  <-- (هذا مهم جداً لـ Render)
